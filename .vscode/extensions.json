@@ -1,0 +1,11 @@
+{
+    "recommendations": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "firsttris.vscode-jest-runner",
+        "ms-vscode.vscode-typescript-next",
+        "christian-kohler.path-intellisense",
+        "usernamehw.errorlens"
+    ]
+}
+
