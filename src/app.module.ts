@@ -11,6 +11,7 @@ import { DepartmentModule } from './modules/departments/department.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ProjectModule } from './modules/projects/project.module';
 import { TimesheetModule } from './modules/timesheets/timesheet.module';
+import { DatabaseSeederModule } from './modules/database-seeder/database-seeder.module';
 import { RequestContextService } from './common/context/request-context.service';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RequestContextInterceptor } from './common/interceptors/request-context.interceptor';
@@ -34,6 +35,7 @@ import { getDatabaseConfig } from './config/database.config';
         AuthModule,
         ProjectModule,
         TimesheetModule,
+        DatabaseSeederModule,
     ],
     controllers: [AppController],
     providers: [

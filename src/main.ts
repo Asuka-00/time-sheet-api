@@ -5,6 +5,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { initializeTransactionalContext, addTransactionalDataSource } from 'typeorm-transactional';
 import { DataSource } from 'typeorm';
+import { DatabaseSeederService } from './modules/database-seeder/database-seeder.service';
 
 async function bootstrap() {
     // 初始化事务上下文
@@ -51,6 +52,14 @@ async function bootstrap() {
     // 注册事务数据源
     const dataSource = app.get(DataSource);
     addTransactionalDataSource(dataSource);
+
+    // 执行数据库初始化（种子数据）
+    try {
+        const seederService = app.get(DatabaseSeederService);
+        await seederService.seed();
+    } catch (error) {
+        console.error('Database seeding initialization failed:', error);
+    }
 
     await app.listen(process.env.PORT ?? 3000);
     console.warn(`Application is running on: http://localhost:${process.env.PORT ?? 3000}`);
