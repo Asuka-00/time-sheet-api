@@ -12,9 +12,9 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ProjectModule } from './modules/projects/project.module';
 import { TimesheetModule } from './modules/timesheets/timesheet.module';
 import { RequestContextService } from './common/context/request-context.service';
-import { AuditSubscriber } from './common/subscribers/audit.subscriber';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RequestContextInterceptor } from './common/interceptors/request-context.interceptor';
+import { getDatabaseConfig } from './config/database.config';
 
 @Module({
     imports: [
@@ -23,15 +23,9 @@ import { RequestContextInterceptor } from './common/interceptors/request-context
             isGlobal: true,
             envFilePath: '.env',
         }),
-        // TypeORM 配置 - SQLite 数据库
-        TypeOrmModule.forRoot({
-            type: 'sqlite',
-            database: process.env.DATABASE_PATH || './database.sqlite',
-            entities: [__dirname + '/**/*.entity{.ts,.js}'],
-            subscribers: [AuditSubscriber],
-            synchronize: true, // 开发环境自动同步，生产环境请设为 false
-            logging: true,
-        }),
+        // TypeORM 配置 - 支持多种数据库 (MySQL, PostgreSQL, Oracle, SQLite)
+        // 数据库类型通过环境变量 DB_TYPE 配置
+        TypeOrmModule.forRoot(getDatabaseConfig()),
         // 业务模块
         UserModule,
         RoleModule,
