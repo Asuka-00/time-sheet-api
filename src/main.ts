@@ -14,7 +14,8 @@ async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
     // 配置 CORS（跨域资源共享）
-    const corsOrigin = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*';
+    const corsOriginEnv = process.env.CORS_ORIGIN || '*';
+    const corsOrigin = corsOriginEnv === '*' ? '*' : corsOriginEnv.split(',');
     const corsCredentials = process.env.CORS_CREDENTIALS === 'true';
 
     app.enableCors({

@@ -13,12 +13,7 @@
 
     // ESLint 设置
     "eslint.enable": true,
-    "eslint.validate": [
-        "javascript",
-        "javascriptreact",
-        "typescript",
-        "typescriptreact"
-    ],
+    "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
     "eslint.useFlatConfig": true,
 
     // Prettier 设置
@@ -49,4 +44,3 @@
         "**/*.log": true
     }
 }
-

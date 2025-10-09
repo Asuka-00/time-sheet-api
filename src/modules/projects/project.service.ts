@@ -108,7 +108,7 @@ export class ProjectService {
     async getProject(uuid?: string): Promise<ProjectVo[]> {
         const projects = await this.projectRepository.find({ where: { uuid } });
         if (!projects || projects.length === 0) {
-            throw new BusinessException(ERROR_CODES.PROJECT.COMMON.NOT_FOUND, 404);
+            return [];
         }
 
         // 填充额外信息
