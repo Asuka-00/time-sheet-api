@@ -295,6 +295,26 @@ export class DatabaseSeederService {
                     updatedBy: undefined,
                     updatedAt: undefined,
                 },
+                {
+                    uuid: 'a6b7c8d9-e0f1-43a2-b4c5-d6e7f8a9b0c1',
+                    name: 'Report Configuration Management',
+                    menuName: 'reportConfigManagement',
+                    code: 'system:report-config',
+                    module: 'system',
+                    parentCode: 'system',
+                    type: 'menu',
+                    path: '/report-config',
+                    icon: 'assessment',
+                    component: 'pages/report-config/ReportConfigManagement.vue',
+                    sort: 4,
+                    description:
+                        'Report configuration management module for creating and managing scheduled report delivery',
+                    status: 1,
+                    createdBy: 'admin',
+                    createdAt: new Date('2025-10-10 16:45:00'),
+                    updatedBy: undefined,
+                    updatedAt: undefined,
+                },
             ];
 
             await this.permissionRepository.save(permissions);

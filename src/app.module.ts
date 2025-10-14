@@ -12,6 +12,10 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ProjectModule } from './modules/projects/project.module';
 import { TimesheetModule } from './modules/timesheets/timesheet.module';
 import { DatabaseSeederModule } from './modules/database-seeder/database-seeder.module';
+import { MailModule } from './modules/mail/mail.module';
+import { ExcelModule } from './modules/excel/excel.module';
+import { ScheduleModule } from './modules/schedule/schedule.module';
+import { ReportConfigModule } from './modules/report-config/report-config.module';
 import { RequestContextService } from './common/context/request-context.service';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RequestContextInterceptor } from './common/interceptors/request-context.interceptor';
@@ -22,7 +26,8 @@ import { getDatabaseConfig } from './config/database.config';
         // 配置模块 - 加载环境变量
         ConfigModule.forRoot({
             isGlobal: true,
-            envFilePath: '.env',
+            envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
+            ignoreEnvFile: false,
         }),
         // TypeORM 配置 - 支持多种数据库 (MySQL, PostgreSQL, Oracle, SQLite)
         // 数据库类型通过环境变量 DB_TYPE 配置
@@ -36,6 +41,11 @@ import { getDatabaseConfig } from './config/database.config';
         ProjectModule,
         TimesheetModule,
         DatabaseSeederModule,
+        // 功能模块
+        MailModule,
+        ExcelModule,
+        ScheduleModule,
+        ReportConfigModule,
     ],
     controllers: [AppController],
     providers: [

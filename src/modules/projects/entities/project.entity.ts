@@ -23,6 +23,10 @@ export class Project {
     @Column()
     managerUserCode: string;
 
+    @ApiProperty({ description: '项目总监用户编码', required: true })
+    @Column()
+    directorUserCode: string;
+
     @ApiProperty({ description: '项目开始日期', required: false })
     @Column({ nullable: true, type: 'datetime' })
     startDate: Date;

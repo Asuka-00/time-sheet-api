@@ -1,6 +1,6 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, FindOptionsWhere } from 'typeorm';
+import { Repository, Between, FindOptionsWhere, In } from 'typeorm';
 import { Timesheet } from './entities/timesheet.entity';
 import { CreateTimesheetDto } from './dto/create-timesheet.dto';
 import { UpdateTimesheetDto } from './dto/update-timesheet.dto';
@@ -571,6 +571,21 @@ export class TimesheetService {
             projectStats,
             statusStats,
         };
+    }
+
+    /**
+     * 查询指定日期范围的工时
+     */
+    async getTimesheetsByDateRange(
+        projectCode: string,
+        startDate: string,
+        endDate: string,
+    ): Promise<Timesheet[]> {
+        const where: FindOptionsWhere<Timesheet> = {};
+        where.projectCode = In(projectCode.split(','));
+        where.workDate = Between(new Date(startDate), new Date(endDate));
+        where.status = 3;
+        return this.timesheetRepository.find({ where });
     }
 
     /**

@@ -27,6 +27,11 @@ export class ProjectDto {
     @IsString()
     managerUserCode: string;
 
+    @ApiProperty({ description: '项目总监用户编码', required: true })
+    @IsNotEmpty({ message: '项目总监不能为空' })
+    @IsString()
+    directorUserCode: string;
+
     @ApiProperty({ description: '项目开始日期', required: false, example: '2025-01-01' })
     @IsOptional()
     @IsDateString()

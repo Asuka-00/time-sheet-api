@@ -101,6 +101,23 @@ export const ERROR_CODES = {
         },
     },
 
+    // 报表配置模块
+    REPORT_CONFIG: {
+        CREATE: {
+            TYPE_ALREADY_EXISTS: 'REPORT_CONFIG.CREATE.TYPE_ALREADY_EXISTS',
+        },
+        UPDATE: {
+            NOT_FOUND: 'REPORT_CONFIG.UPDATE.NOT_FOUND',
+        },
+        DELETE: {
+            NOT_FOUND: 'REPORT_CONFIG.DELETE.NOT_FOUND',
+        },
+        COMMON: {
+            NOT_FOUND: 'REPORT_CONFIG.COMMON.NOT_FOUND',
+            ID_REQUIRED: 'REPORT_CONFIG.COMMON.ID_REQUIRED',
+        },
+    },
+
     // 工时模块
     TIMESHEET: {
         CREATE: {

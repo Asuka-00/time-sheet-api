@@ -35,7 +35,9 @@ lerna-debug.log*
 !.vscode/launch.json
 !.vscode/extensions.json
 
-
+# env
+.env*
+!.env.example
 
 # temp directory
 .temp
@@ -54,3 +56,6 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 *.sqlite
 *.sqlite3
 *.db
+
+# Docker
+docker-compose.yml

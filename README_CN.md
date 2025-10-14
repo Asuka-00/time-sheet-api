@@ -57,17 +57,25 @@ npm install
 
 #### 3. 配置环境变量
 
-复制示例环境文件并进行配置：
+本项目使用不同的环境配置文件来管理开发和生产环境的配置：
+
+- `.env.development` - 开发环境配置
+- `.env.production` - 生产环境配置
+- `.env.example` - 配置模板（参考示例）
+
+**首次设置**：
 
 ```bash
 # Windows
-copy .env.example .env
+copy .env.example .env.development
+copy .env.example .env.production
 
 # Linux/macOS
-cp .env.example .env
+cp .env.example .env.development
+cp .env.example .env.production
 ```
 
-编辑 `.env` 文件，配置数据库、JWT 等参数（详见下方配置说明）。
+编辑 `.env.development` 和 `.env.production` 文件，配置数据库、JWT 等参数（详见下方配置说明）。
 
 #### 4. 启动开发服务器
 
@@ -123,9 +131,65 @@ time-sheet-api/
 
 ## ⚙️ 配置说明
 
+### 多环境配置
+
+本项目支持开发和生产环境的独立配置，通过不同的环境配置文件实现配置隔离。
+
+#### 环境配置文件
+
+- `.env.development` - 开发环境配置（用于本地开发和测试）
+- `.env.production` - 生产环境配置（用于生产部署）
+- `.env.example` - 配置模板文件（提供参考，会提交到代码仓库）
+
+#### 运行不同环境
+
+项目根据启动脚本自动加载对应的环境配置：
+
+**开发环境**：
+
+```bash
+# 开发模式（监听文件变化）
+npm run start:dev
+
+# 开发模式（普通启动）
+npm run start
+
+# 开发模式（调试模式）
+npm run start:debug
+```
+
+以上命令会自动加载 `.env.development` 配置文件。
+
+**生产环境**：
+
+```bash
+# 构建生产版本
+npm run build:prod
+
+# 运行生产版本
+npm run start:prod
+```
+
+以上命令会自动加载 `.env.production` 配置文件。
+
+#### 配置文件优先级
+
+项目通过 `NODE_ENV` 环境变量决定加载哪个配置文件：
+
+- `NODE_ENV=development` → 加载 `.env.development`
+- `NODE_ENV=production` → 加载 `.env.production`
+- 未设置时默认为 `development`
+
+**注意事项**：
+
+- `.env.development` 和 `.env.production` 不会提交到代码仓库（已在 `.gitignore` 中排除）
+- `.env.example` 会提交到代码仓库，作为配置模板供开发者参考
+- 首次克隆项目后，需要手动创建 `.env.development` 和 `.env.production` 文件
+
 ### 环境变量
 
-应用使用环境变量进行配置。将 `.env.example` 复制为 `.env` 并配置以下内容：
+应用使用环境变量进行配置。将 `.env.example` 复制为 `.env.development` 和 `.env.production`
+并配置以下内容：
 
 ### 数据库配置
 
@@ -344,8 +408,17 @@ DEV_TOKEN=dev-token-2024
 # 开发模式（带热重载）
 npm run start:dev
 
-# 生产环境构建
+# 开发模式（普通启动）
+npm run start
+
+# 开发模式（调试模式）
+npm run start:debug
+
+# 开发环境构建
 npm run build
+
+# 生产环境构建
+npm run build:prod
 
 # 运行生产版本
 npm run start:prod
@@ -396,19 +469,21 @@ npm run test:cov
 ### 构建
 
 ```bash
-npm run build
+npm run build:prod
 ```
 
 编译输出将在 `dist/` 目录中。
 
 ### 环境设置
 
-1. 设置 `NODE_ENV=production`
-2. 使用强密钥配置 JWT 令牌
-3. 将 `DB_SYNCHRONIZE` 设为 `false`（使用迁移管理数据库）
-4. 配置具体的 CORS 源地址
-5. 禁用 `DEV_MODE`
-6. 使用生产环境的数据库凭证
+1. 确保已创建 `.env.production` 文件（从 `.env.example` 复制并修改）
+2. 在 `.env.production` 中配置以下关键项：
+    - 使用强随机密钥配置 `JWT_SECRET` 和 `JWT_REFRESH_SECRET`
+    - 将 `DB_SYNCHRONIZE` 设为 `false`（使用迁移管理数据库）
+    - 配置具体的 `CORS_ORIGIN`（不要使用 `*`）
+    - 使用生产环境的数据库凭证
+    - 设置 `NODE_ENV=production`（脚本会自动设置）
+3. 确保生产数据库已正确设置和初始化
 
 ### 运行生产版本
 
@@ -416,10 +491,16 @@ npm run build
 npm run start:prod
 ```
 
+该命令会自动使用 `.env.production` 配置文件。
+
 或使用进程管理器如 PM2：
 
 ```bash
-pm2 start dist/main.js --name time-sheet-api
+# 设置环境变量后启动
+pm2 start dist/main.js --name time-sheet-api --env production
+
+# 或者在启动命令中指定环境变量
+pm2 start dist/main.js --name time-sheet-api --node-args="NODE_ENV=production"
 ```
 
 ## 🐛 常见问题

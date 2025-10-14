@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+    # ============================================
+    # MySQL 数据库服务
+    # ============================================
+    mysql:
+        image: mysql:8.0
+        container_name: timesheet-mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: your_mysql_root_password
+            MYSQL_DATABASE: seminnov_cost
+            MYSQL_CHARACTER_SET_SERVER: utf8mb4
+            MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+        ports:
+            - '3306:3306'
+        volumes:
+            - mysql_data:/var/lib/mysql
+        healthcheck:
+            test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+            interval: 10s
+            timeout: 5s
+            retries: 5
+        networks:
+            - timesheet-network
+        restart: unless-stopped
+
+    # ============================================
+    # NestJS 应用服务
+    # ============================================
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: timesheet-api
+        depends_on:
+            mysql:
+                condition: service_healthy
+        environment:
+            # 数据库配置
+            DB_TYPE: mysql
+            DB_HOST: mysql
+            DB_PORT: 3306
+            DB_USERNAME: root
+            DB_PASSWORD: your_mysql_root_password
+            DB_DATABASE: seminnov_cost
+            DB_SYNCHRONIZE: 'true'
+            DB_LOGGING: 'true'
+
+            # JWT 配置
+            JWT_ACCESS_SECRET: your_jwt_access_secret_here_minimum_32_characters
+            JWT_ACCESS_EXPIRATION: 30m
+            JWT_REFRESH_SECRET: your_jwt_refresh_secret_here_minimum_32_characters
+            JWT_REFRESH_EXPIRATION: 7d
+
+            # 服务器配置
+            PORT: 9000
+            NODE_ENV: production
+
+            # CORS 配置
+            CORS_ORIGIN: '*'
+            CORS_CREDENTIALS: 'true'
+
+            # 开发模式配置
+            DEV_MODE: 'true'
+            DEV_TOKEN: your_dev_token_here
+
+            # 邮件配置
+            MAIL_HOST: smtp.exmail.qq.com
+            MAIL_PORT: 465
+            MAIL_USER: your_email@example.com
+            MAIL_PASSWORD: your_email_password
+            MAIL_FROM: '"Your App Name" <your_email@example.com>'
+            MAIL_SECURE: 'true'
+        ports:
+            - '9000:9000'
+        networks:
+            - timesheet-network
+        restart: unless-stopped
+
+# ============================================
+# 网络配置
+# ============================================
+networks:
+    timesheet-network:
+        driver: bridge
+
+# ============================================
+# 数据卷配置
+# ============================================
+volumes:
+    mysql_data:
+        driver: local

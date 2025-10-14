@@ -87,6 +87,10 @@ export class ProjectService {
                 const manager = await this.userService.findByUserCode(project.managerUserCode);
                 vo.managerUserName = manager?.userName;
 
+                // 获取项目总监姓名
+                const director = await this.userService.findByUserCode(project.directorUserCode);
+                vo.directorUserName = director?.userName;
+
                 // 获取成员数量
                 const memberCount = await this.projectMemberRepository.count({
                     where: { projectCode: project.projectCode },

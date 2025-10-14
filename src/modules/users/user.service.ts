@@ -137,6 +137,21 @@ export class UserService {
     }
 
     /**
+     * 通过用户编码批量查找用户
+     * @param userCodes 用户编码数组
+     * @returns 用户信息数组
+     */
+    async findByUserCodes(userCodes: string[]): Promise<User[]> {
+        if (!userCodes || userCodes.length === 0) {
+            return [];
+        }
+        return await this.userRepository
+            .createQueryBuilder('user')
+            .where('user.userCode IN (:...userCodes)', { userCodes })
+            .getMany();
+    }
+
+    /**
      * 通过UUID查找用户
      * @param uuid 用户UUID
      * @returns 用户信息
