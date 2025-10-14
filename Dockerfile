@@ -3,6 +3,9 @@
 # ============================================
 FROM node:20-alpine AS builder
 
+# 定义数据库驱动构建参数，默认为 mysql2
+ARG DB_DRIVER=mysql2
+
 # 配置国内镜像源（针对中国网络环境优化）
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
@@ -20,6 +23,9 @@ RUN npm config set registry https://registry.npmmirror.com
 
 # 安装所有依赖（包括 devDependencies）
 RUN npm ci --legacy-peer-deps
+
+# 安装指定的数据库驱动（通过构建参数指定）
+RUN npm install --legacy-peer-deps ${DB_DRIVER}
 
 # 复制源代码和配置文件
 COPY src ./src

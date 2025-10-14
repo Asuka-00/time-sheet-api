@@ -55,7 +55,30 @@ cd time-sheet-api
 npm install
 ```
 
-#### 3. 配置环境变量
+#### 3. 安装数据库驱动
+
+本项目支持多种数据库，数据库驱动包被设置为可选依赖。根据你使用的数据库类型，需要手动安装对应的驱动：
+
+```bash
+# MySQL（推荐用于生产环境）
+npm install mysql2
+
+# PostgreSQL
+npm install pg
+
+# SQLite（开发/测试推荐，已默认安装）
+npm install sqlite3
+
+# Oracle（企业应用）
+npm install oracledb
+```
+
+**注意**：
+
+- 如果使用 Docker 部署，驱动会自动安装，无需手动操作
+- SQLite 在某些环境下可能需要编译，如遇到问题可跳过，使用 MySQL 或 PostgreSQL
+
+#### 4. 配置环境变量
 
 本项目使用不同的环境配置文件来管理开发和生产环境的配置：
 
@@ -77,7 +100,7 @@ cp .env.example .env.production
 
 编辑 `.env.development` 和 `.env.production` 文件，配置数据库、JWT 等参数（详见下方配置说明）。
 
-#### 4. 启动开发服务器
+#### 5. 启动开发服务器
 
 ```bash
 npm run start:dev
@@ -85,7 +108,7 @@ npm run start:dev
 
 服务器将在 `http://localhost:8090` 启动（或您配置的端口）。
 
-#### 5. 访问 Swagger 文档
+#### 6. 访问 Swagger 文档
 
 在浏览器中打开：`http://localhost:8090/api`
 
@@ -466,7 +489,58 @@ npm run test:cov
 
 ## 📦 生产环境部署
 
-### 构建
+### Docker 部署（推荐）
+
+项目已配置 Docker 和 Docker Compose，支持一键部署。
+
+#### 数据库驱动配置
+
+在 `docker-compose.yml` 中配置数据库驱动（默认已配置 MySQL）：
+
+```yaml
+app:
+    build:
+        context: .
+        dockerfile: Dockerfile
+        args:
+            DB_DRIVER: mysql2 # 可选值: mysql2, pg, sqlite3, oracledb
+```
+
+**支持的数据库驱动**：
+
+- `mysql2` - MySQL 数据库（默认）
+- `pg` - PostgreSQL 数据库
+- `sqlite3` - SQLite 数据库
+- `oracledb` - Oracle 数据库
+
+#### 启动服务
+
+```bash
+# 构建并启动所有服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f app
+
+# 停止服务
+docker-compose down
+```
+
+#### 自定义构建
+
+如果需要在构建时指定数据库驱动：
+
+```bash
+# 构建时指定数据库驱动
+docker build --build-arg DB_DRIVER=mysql2 -t timesheet-api .
+
+# 使用 PostgreSQL 驱动构建
+docker build --build-arg DB_DRIVER=pg -t timesheet-api .
+```
+
+### 手动部署
+
+#### 构建
 
 ```bash
 npm run build:prod

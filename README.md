@@ -57,7 +57,32 @@ cd time-sheet-api
 npm install
 ```
 
-3. **Configure environment variables**
+3. **Install database driver**
+
+This project supports multiple databases. Database drivers are set as optional dependencies. Install
+the driver for your database type:
+
+```bash
+# MySQL (recommended for production)
+npm install mysql2
+
+# PostgreSQL
+npm install pg
+
+# SQLite (recommended for development/testing)
+npm install sqlite3
+
+# Oracle (enterprise applications)
+npm install oracledb
+```
+
+**Note**:
+
+- If deploying with Docker, drivers are installed automatically
+- SQLite may require compilation in some environments; if issues occur, use MySQL or PostgreSQL
+  instead
+
+4. **Configure environment variables**
 
 Copy the example environment file and configure it:
 
@@ -71,7 +96,7 @@ cp .env.example .env
 
 Edit `.env` file with your configuration (see Configuration section below).
 
-4. **Start the development server**
+5. **Start the development server**
 
 ```bash
 npm run start:dev
@@ -79,7 +104,7 @@ npm run start:dev
 
 The server will start at `http://localhost:8090` (or your configured PORT).
 
-5. **Access Swagger Documentation**
+6. **Access Swagger Documentation**
 
 Open your browser and navigate to: `http://localhost:8090/api`
 
@@ -397,7 +422,58 @@ npm run test:cov
 
 ## 📦 Production Deployment
 
-### Build
+### Docker Deployment (Recommended)
+
+The project is configured with Docker and Docker Compose for one-command deployment.
+
+#### Database Driver Configuration
+
+Configure the database driver in `docker-compose.yml` (MySQL is configured by default):
+
+```yaml
+app:
+    build:
+        context: .
+        dockerfile: Dockerfile
+        args:
+            DB_DRIVER: mysql2 # Options: mysql2, pg, sqlite3, oracledb
+```
+
+**Supported Database Drivers**:
+
+- `mysql2` - MySQL database (default)
+- `pg` - PostgreSQL database
+- `sqlite3` - SQLite database
+- `oracledb` - Oracle database
+
+#### Start Services
+
+```bash
+# Build and start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f app
+
+# Stop services
+docker-compose down
+```
+
+#### Custom Build
+
+To specify a database driver during build:
+
+```bash
+# Build with MySQL driver
+docker build --build-arg DB_DRIVER=mysql2 -t timesheet-api .
+
+# Build with PostgreSQL driver
+docker build --build-arg DB_DRIVER=pg -t timesheet-api .
+```
+
+### Manual Deployment
+
+#### Build
 
 ```bash
 npm run build
