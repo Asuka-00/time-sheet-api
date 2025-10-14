@@ -1,23 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class UserDto {
-    @ApiProperty({ description: '用户ID', required: false })
-    @IsOptional()
-    @IsString()
-    uuid?: string;
-
+export class CreateUserDto {
     @ApiProperty({ description: '用户代码', required: true })
     @IsString()
     userCode: string;
 
     @ApiProperty({ description: '用户邮箱', required: false })
+    @IsOptional()
     @IsEmail()
-    email: string;
+    email?: string;
 
     @ApiProperty({ description: '用户手机号', required: false })
+    @IsOptional()
     @IsString()
-    phoneNumber: string;
+    phoneNumber?: string;
 
     @ApiProperty({ description: '用户名称', required: true })
     @IsString()
@@ -27,20 +24,23 @@ export class UserDto {
     @IsString()
     password: string;
 
-    @ApiProperty({ description: '用户角色ID', required: true })
+    @ApiProperty({ description: '用户角色', required: false })
+    @IsOptional()
     @IsString()
-    roleName: string;
+    roleName?: string;
 
-    @ApiProperty({ description: '用户部门ID', required: false })
+    @ApiProperty({ description: '用户部门', required: false })
+    @IsOptional()
     @IsString()
-    departmentName: string;
+    departmentName?: string;
 
     @ApiProperty({ description: '用户时区', required: false, example: 'Asia/Shanghai' })
     @IsOptional()
     @IsString()
     timezone?: string;
 
-    @ApiProperty({ description: '用户状态', required: true })
+    @ApiProperty({ description: '用户状态', required: false, default: 1 })
+    @IsOptional()
     @IsNumber()
-    status: number;
+    status?: number;
 }

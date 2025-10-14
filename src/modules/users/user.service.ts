@@ -2,7 +2,8 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, FindOptionsWhere } from 'typeorm';
-import { UserDto } from './dto/user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { UserVo } from './dto/user.vo';
 import { BusinessException, ERROR_CODES } from '../../common';
 import { RoleService } from '../roles/role.service';
@@ -19,31 +20,29 @@ export class UserService {
 
     /**
      * 创建用户
-     * @param userDto 用户信息
+     * @param createUserDto 用户信息
      */
-    async createUser(
-        userDto: Partial<UserDto> & { userCode: string; userName: string; password: string },
-    ): Promise<void> {
+    async createUser(createUserDto: CreateUserDto): Promise<void> {
         // 判断用户是否存在
-        const user = await this.userRepository.findOneBy({ userCode: userDto.userCode });
+        const user = await this.userRepository.findOneBy({ userCode: createUserDto.userCode });
         if (user) {
             throw new BusinessException(ERROR_CODES.USER.CREATE.ALREADY_EXISTS, 400);
         }
 
         // 加密密码
-        const hashedPassword = await this.hashPassword(userDto.password);
+        const hashedPassword = await this.hashPassword(createUserDto.password);
 
         // 保存用户（使用加密后的密码，设置默认值）
         await this.userRepository.save({
-            userCode: userDto.userCode,
-            userName: userDto.userName,
+            userCode: createUserDto.userCode,
+            userName: createUserDto.userName,
             password: hashedPassword,
-            email: userDto.email ?? null,
-            phoneNumber: userDto.phoneNumber ?? null,
-            roleName: userDto.roleName ?? null,
-            departmentName: userDto.departmentName ?? null,
-            timezone: userDto.timezone ?? null,
-            status: userDto.status ?? 1,
+            email: createUserDto.email ?? null,
+            phoneNumber: createUserDto.phoneNumber ?? null,
+            roleName: createUserDto.roleName ?? null,
+            departmentName: createUserDto.departmentName ?? null,
+            timezone: createUserDto.timezone ?? null,
+            status: createUserDto.status ?? 1,
         } as User);
         return;
     }
@@ -93,15 +92,15 @@ export class UserService {
 
     /**
      * 更新用户
-     * @param userDto 用户信息
+     * @param updateUserDto 用户信息
      */
-    async updateUser(userDto: UserDto): Promise<void> {
-        if (!userDto.uuid) {
+    async updateUser(updateUserDto: UpdateUserDto): Promise<void> {
+        if (!updateUserDto.uuid) {
             throw new BusinessException(ERROR_CODES.USER.COMMON.ID_REQUIRED, 400);
         }
-        // 排除密码字段，密码只能通过resetPassword或changePassword接口修改
-        const { password, ...updateData } = userDto;
-        await this.userRepository.update(userDto.uuid, updateData);
+        // 排除 uuid 字段，不允许修改主键
+        const { uuid, ...updateData } = updateUserDto;
+        await this.userRepository.update(uuid, updateData);
         return;
     }
 

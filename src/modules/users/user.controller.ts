@@ -1,6 +1,7 @@
 import { Controller, Delete, Get, Post, Put, Query, Body } from '@nestjs/common';
 import { Result, PageResult, SUCCESS_CODES } from '../../common';
-import { UserDto } from './dto/user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { UserVo } from './dto/user.vo';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -18,8 +19,8 @@ export class UserController {
     @ApiResponse({ status: 200, description: '创建成功' })
     @ApiResponse({ status: 400, description: '参数错误' })
     @Post('create')
-    async createUser(@Body() userDto: UserDto): Promise<Result<void>> {
-        await this.userService.createUser(userDto);
+    async createUser(@Body() createUserDto: CreateUserDto): Promise<Result<void>> {
+        await this.userService.createUser(createUserDto);
         return Result.success();
     }
 
@@ -60,8 +61,8 @@ export class UserController {
     @ApiResponse({ status: 200, description: '更新成功' })
     @ApiResponse({ status: 404, description: '用户不存在' })
     @Put('update')
-    async updateUser(@Body() userDto: UserDto): Promise<Result<void>> {
-        await this.userService.updateUser(userDto);
+    async updateUser(@Body() updateUserDto: UpdateUserDto): Promise<Result<void>> {
+        await this.userService.updateUser(updateUserDto);
         return Result.success();
     }
 
