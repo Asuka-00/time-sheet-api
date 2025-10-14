@@ -11,11 +11,11 @@ export class UserDto {
     @IsString()
     userCode: string;
 
-    @ApiProperty({ description: '用户邮箱', required: true })
+    @ApiProperty({ description: '用户邮箱', required: false })
     @IsEmail()
     email: string;
 
-    @ApiProperty({ description: '用户手机号', required: true })
+    @ApiProperty({ description: '用户手机号', required: false })
     @IsString()
     phoneNumber: string;
 
@@ -31,7 +31,7 @@ export class UserDto {
     @IsString()
     roleName: string;
 
-    @ApiProperty({ description: '用户部门ID', required: true })
+    @ApiProperty({ description: '用户部门ID', required: false })
     @IsString()
     departmentName: string;
 

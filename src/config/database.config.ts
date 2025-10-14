@@ -28,6 +28,10 @@ export const getDatabaseConfig = (): TypeOrmModuleOptions => {
                 username: process.env.DB_USERNAME || 'root',
                 password: process.env.DB_PASSWORD || '',
                 database: process.env.DB_DATABASE || 'timesheet',
+                charset: 'utf8mb4',
+                extra: {
+                    charset: 'utf8mb4_unicode_ci',
+                },
             } as TypeOrmModuleOptions;
 
         case 'postgres':
