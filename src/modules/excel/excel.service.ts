@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
+import * as path from 'path';
+import * as fs from 'fs';
 import { ProjectService } from '../projects/project.service';
 import { TimesheetService } from '../timesheets/timesheet.service';
 import { UserService } from '../users/user.service';
@@ -16,6 +18,18 @@ export default class ExcelService {
     private reportCodeCache: Map<string, number> = new Map();
 
     /**
+     * 获取模板文件路径
+     * @param filename 模板文件名
+     * @returns 模板文件的绝对路径
+     */
+    private getTemplatePath(filename: string): string {
+        // 构建模板文件路径
+        // 开发环境: src/modules/excel/template/
+        // 生产环境: dist/modules/excel/template/
+        return path.join(__dirname, 'template', filename);
+    }
+
+    /**
      * 导出各个项目工时记录
      * @param projectCodes 项目编号列表（可选），用于过滤特定项目
      * @returns Excel 文件的 Buffer 和文件名
@@ -25,7 +39,15 @@ export default class ExcelService {
     ): Promise<{ buffer: Buffer; filename: string }> {
         // 读取RD报表excel模板
         const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile('src/modules/excel/template/rd_report.xlsx');
+        const templatePath = this.getTemplatePath('rd_report.xlsx');
+
+        // 检查文件是否存在
+        if (!fs.existsSync(templatePath)) {
+            throw new Error(`模板文件不存在: ${templatePath}`);
+        }
+
+        this.logger.debug(`加载模板文件: ${templatePath}`);
+        await workbook.xlsx.readFile(templatePath);
 
         // 获取工作表1
         const worksheet1 = workbook.getWorksheet(1);
