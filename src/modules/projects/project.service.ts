@@ -5,7 +5,7 @@ import { Project } from './entities/project.entity';
 import { ProjectMember } from './entities/project-member.entity';
 import { ProjectDto } from './dto/project.dto';
 import { ProjectVo } from './dto/project.vo';
-import { ProjectMemberDto } from './dto/project-member.dto';
+import { ProjectMemberDto, BatchAddProjectMembersDto } from './dto/project-member.dto';
 import { ProjectMemberVo } from './dto/project-member.vo';
 import { BusinessException, ERROR_CODES } from '../../common';
 import { UserService } from '../users/user.service';
@@ -272,6 +272,84 @@ export class ProjectService {
 
         // 保存项目成员
         await this.projectMemberRepository.save(memberDto);
+    }
+
+    /**
+     * 批量添加项目成员
+     * @param batchDto 批量添加项目成员信息
+     * @returns 添加结果统计
+     */
+    async batchAddProjectMembers(batchDto: BatchAddProjectMembersDto): Promise<{
+        successCount: number;
+        failedCount: number;
+        failures: Array<{ userCode: string; reason: string }>;
+    }> {
+        // 验证项目是否存在
+        const project = await this.projectRepository.findOneBy({
+            projectCode: batchDto.projectCode,
+        });
+        if (!project) {
+            throw new BusinessException(ERROR_CODES.PROJECT.COMMON.NOT_FOUND, 404);
+        }
+
+        let successCount = 0;
+        let failedCount = 0;
+        const failures: Array<{ userCode: string; reason: string }> = [];
+
+        // 遍历用户编码列表，逐个添加
+        for (const userCode of batchDto.userCodes) {
+            try {
+                // 验证用户是否存在
+                const user = await this.userService.findByUserCode(userCode);
+                if (!user) {
+                    failures.push({
+                        userCode,
+                        reason: '用户不存在',
+                    });
+                    failedCount++;
+                    continue;
+                }
+
+                // 验证成员是否已存在
+                const existingMember = await this.projectMemberRepository.findOneBy({
+                    projectCode: batchDto.projectCode,
+                    userCode: userCode,
+                });
+                if (existingMember) {
+                    failures.push({
+                        userCode,
+                        reason: '该用户已是项目成员',
+                    });
+                    failedCount++;
+                    continue;
+                }
+
+                // 创建项目成员实体
+                const memberDto: ProjectMemberDto = {
+                    projectCode: batchDto.projectCode,
+                    userCode: userCode,
+                    role: batchDto.role,
+                    joinDate: batchDto.joinDate,
+                };
+
+                // 保存项目成员
+                await this.projectMemberRepository.save(memberDto);
+                successCount++;
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : '添加失败';
+                failures.push({
+                    userCode,
+                    reason: errorMessage,
+                });
+                failedCount++;
+            }
+        }
+
+        return {
+            successCount,
+            failedCount,
+            failures,
+        };
     }
 
     /**

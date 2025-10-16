@@ -3,7 +3,7 @@ import { ProjectService } from './project.service';
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ProjectDto } from './dto/project.dto';
 import { ProjectVo } from './dto/project.vo';
-import { ProjectMemberDto } from './dto/project-member.dto';
+import { ProjectMemberDto, BatchAddProjectMembersDto } from './dto/project-member.dto';
 import { ProjectMemberVo } from './dto/project-member.vo';
 import { PageResult, Result } from 'src/common';
 import { RequestContextService } from 'src/common/context/request-context.service';
@@ -95,6 +95,24 @@ export class ProjectController {
     async addProjectMember(@Body() memberDto: ProjectMemberDto): Promise<Result<void>> {
         await this.projectService.addProjectMember(memberDto);
         return Result.success();
+    }
+
+    @ApiOperation({
+        summary: '批量添加项目成员',
+        description: '为指定项目批量添加多个成员',
+    })
+    @ApiResponse({ status: 200, description: '批量添加成功，返回成功和失败的详情' })
+    @ApiResponse({ status: 404, description: '项目不存在' })
+    @Post('member/batch-add')
+    async batchAddProjectMembers(@Body() batchDto: BatchAddProjectMembersDto): Promise<
+        Result<{
+            successCount: number;
+            failedCount: number;
+            failures: Array<{ userCode: string; reason: string }>;
+        }>
+    > {
+        const result = await this.projectService.batchAddProjectMembers(batchDto);
+        return Result.success(result);
     }
 
     @ApiOperation({ summary: '移除项目成员', description: '根据项目成员ID移除成员' })
