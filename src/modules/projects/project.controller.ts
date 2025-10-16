@@ -45,10 +45,12 @@ export class ProjectController {
     ): Promise<Result<PageResult<ProjectVo>>> {
         const pageNum = Number(current) || 1;
         const pageSize = Number(size) || 10;
+        const userCode = RequestContextService.getCurrentUserCode();
         const { records, total } = await this.projectService.getProjectList(
             pageNum,
             pageSize,
             searchKey,
+            userCode,
         );
         return Result.page(records, total, pageNum, pageSize);
     }

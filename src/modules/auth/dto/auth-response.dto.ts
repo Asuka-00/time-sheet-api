@@ -49,4 +49,12 @@ export class AuthResponseDto {
         required: false,
     })
     permissions?: PermissionVo[];
+
+    @ApiProperty({
+        description: '用户按钮权限代码数组',
+        type: [String],
+        required: false,
+        example: ['button:user:create', 'button:user:edit'],
+    })
+    buttonPermissions?: string[];
 }

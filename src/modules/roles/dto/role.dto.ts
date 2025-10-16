@@ -15,6 +15,15 @@ export class RoleDto {
     description: string;
 
     @ApiProperty({
+        description: '数据范围',
+        required: false,
+        example: 'ALL',
+    })
+    @IsOptional()
+    @IsString()
+    dataScope?: string;
+
+    @ApiProperty({
         description: '权限代码数组',
         required: false,
         example: ['user:create', 'user:update', 'user:delete'],

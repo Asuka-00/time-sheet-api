@@ -1,6 +1,6 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, FindOptionsWhere } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Project } from './entities/project.entity';
 import { ProjectMember } from './entities/project-member.entity';
 import { ProjectDto } from './dto/project.dto';
@@ -9,6 +9,7 @@ import { ProjectMemberDto } from './dto/project-member.dto';
 import { ProjectMemberVo } from './dto/project-member.vo';
 import { BusinessException, ERROR_CODES } from '../../common';
 import { UserService } from '../users/user.service';
+import { RoleService } from '../roles/role.service';
 
 @Injectable()
 export class ProjectService {
@@ -19,6 +20,8 @@ export class ProjectService {
         private readonly projectMemberRepository: Repository<ProjectMember>,
         @Inject(forwardRef(() => UserService))
         private readonly userService: UserService,
+        @Inject(forwardRef(() => RoleService))
+        private readonly roleService: RoleService,
     ) {}
 
     /**
@@ -49,34 +52,106 @@ export class ProjectService {
      * @param current 当前页码
      * @param size 每页大小
      * @param searchKey 搜索关键字（可选）
+     * @param userCode 当前用户编码（可选）
      * @returns 分页数据和总数
      */
     async getProjectList(
         current: number,
         size: number,
         searchKey?: string,
+        userCode?: string,
     ): Promise<{ records: ProjectVo[]; total: number }> {
+        // 如果没有用户编码，返回空列表
+        if (!userCode) {
+            return { records: [], total: 0 };
+        }
+
+        const user = await this.userService.findByUserCode(userCode);
+        if (!user) {
+            return { records: [], total: 0 };
+        }
+
+        // 获取用户所有角色的数据范围
+        const allDataScopes: string[] = [];
+        if (user.roleName) {
+            // 用户可能有多个角色（逗号分隔），获取所有角色的 dataScope
+            const roleNames = user.roleName
+                .split(',')
+                .map((r) => r.trim())
+                .filter(Boolean);
+
+            // 查询所有角色并收集 dataScope
+            for (const roleName of roleNames) {
+                const role = await this.roleService.getRoleByName(roleName);
+                if (role?.dataScope) {
+                    allDataScopes.push(role.dataScope);
+                }
+            }
+        }
+
         // 计算跳过的记录数
         const skip = (current - 1) * size;
 
-        // 构建查询条件
-        let where: FindOptionsWhere<Project> | FindOptionsWhere<Project>[] = {};
+        // 构建查询
+        const queryBuilder = this.projectRepository.createQueryBuilder('project');
+
+        // 根据数据范围构建查询条件
+        if (allDataScopes.length > 0) {
+            // 角色有数据权限配置，优先使用角色数据权限
+            // 合并所有角色的 dataScope
+            const allScopeValues: string[] = [];
+            let hasAllPermission = false;
+
+            for (const dataScope of allDataScopes) {
+                const scopeValues = dataScope
+                    .split(',')
+                    .map((s) => s.trim())
+                    .filter(Boolean);
+
+                // 检查是否包含 ALL
+                if (scopeValues.includes('ALL')) {
+                    hasAllPermission = true;
+                    break;
+                }
+
+                // 收集所有项目编号
+                allScopeValues.push(...scopeValues);
+            }
+
+            if (hasAllPermission) {
+                // 任意角色包含 ALL，不添加任何过滤条件，返回所有项目
+                // queryBuilder 不需要 where 条件
+            } else {
+                // 合并所有角色的项目编号（去重）
+                const uniqueProjectCodes = [...new Set(allScopeValues)];
+                if (uniqueProjectCodes.length > 0) {
+                    queryBuilder.where('project.projectCode IN (:...projectCodes)', {
+                        projectCodes: uniqueProjectCodes,
+                    });
+                }
+            }
+        } else {
+            // 角色无数据权限配置，使用默认权限：只能查看自己作为项目经理或项目总监的项目
+            queryBuilder.where(
+                '(project.managerUserCode = :userCode OR project.directorUserCode = :userCode)',
+                { userCode },
+            );
+        }
+
+        // 如果有搜索关键字，添加搜索条件
         if (searchKey) {
-            where = [
-                { projectCode: Like(`%${searchKey}%`) },
-                { projectName: Like(`%${searchKey}%`) },
-            ];
+            queryBuilder.andWhere(
+                '(project.projectCode LIKE :searchKey OR project.projectName LIKE :searchKey)',
+                { searchKey: `%${searchKey}%` },
+            );
         }
 
         // 执行分页查询
-        const [records, total] = await this.projectRepository.findAndCount({
-            where,
-            skip,
-            take: size,
-            order: {
-                createdAt: 'DESC',
-            },
-        });
+        const [records, total] = await queryBuilder
+            .orderBy('project.createdAt', 'DESC')
+            .skip(skip)
+            .take(size)
+            .getManyAndCount();
 
         // 填充额外信息
         const projectVos: ProjectVo[] = await Promise.all(

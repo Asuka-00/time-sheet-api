@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, forwardRef, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Like, Repository } from 'typeorm';
 import { Transactional } from 'typeorm-transactional';
@@ -7,14 +7,22 @@ import { RolePermission } from './entities/role-permission.entity';
 import { RoleDto } from './dto/role.dto';
 import { RoleVo } from './dto/role.vo';
 import { BusinessException, ERROR_CODES } from '../../common';
+import { User } from '../users/entities/user.entity';
+import { WebSocketService } from '../websocket/websocket.service';
 
 @Injectable()
 export class RoleService {
+    private readonly logger = new Logger(RoleService.name);
+
     constructor(
         @InjectRepository(Role)
         private readonly roleRepository: Repository<Role>,
         @InjectRepository(RolePermission)
         private readonly rolePermissionRepository: Repository<RolePermission>,
+        @InjectRepository(User)
+        private readonly userRepository: Repository<User>,
+        @Inject(forwardRef(() => WebSocketService))
+        private readonly websocketService: WebSocketService,
     ) {}
 
     /**
@@ -119,6 +127,19 @@ export class RoleService {
                 );
                 await this.rolePermissionRepository.save(rolePermissions);
             }
+
+            // 推送权限给所有使用该角色的用户
+            const users = await this.userRepository.find({
+                where: { roleName: roleData.name, status: 1 },
+                select: ['userCode'],
+            });
+
+            if (users.length > 0) {
+                const userCodes = users.map((u) => u.userCode);
+                this.websocketService.pushPermissionsToUsers(userCodes).catch((err: Error) => {
+                    this.logger.error(`批量推送权限失败: ${err.message}`);
+                });
+            }
         }
     }
 
@@ -145,5 +166,14 @@ export class RoleService {
             where: { roleName },
         });
         return rolePermissions.map((rp) => rp.permissionCode);
+    }
+
+    /**
+     * 根据角色名称查询角色信息
+     * @param roleName 角色名称
+     * @returns 角色信息
+     */
+    async getRoleByName(roleName: string): Promise<Role | null> {
+        return await this.roleRepository.findOne({ where: { name: roleName } });
     }
 }

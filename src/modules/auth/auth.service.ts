@@ -74,11 +74,16 @@ export class AuthService {
         const permissionCodes = await this.userService.getUserAllPermissions(user);
         const permissions = await this.permissionService.getUserPermissionTree(permissionCodes);
 
+        // 获取用户按钮权限
+        const buttonPermissions =
+            await this.permissionService.getUserButtonPermissions(permissionCodes);
+
         return {
             accessToken,
             refreshToken,
             user: userInfo,
             permissions,
+            buttonPermissions,
         };
     }
 

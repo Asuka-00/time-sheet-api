@@ -1,4 +1,4 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Inject, forwardRef, Logger } from '@nestjs/common';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, FindOptionsWhere } from 'typeorm';
@@ -7,15 +7,20 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UserVo } from './dto/user.vo';
 import { BusinessException, ERROR_CODES } from '../../common';
 import { RoleService } from '../roles/role.service';
+import { WebSocketService } from '../websocket/websocket.service';
 import * as argon2 from 'argon2';
 
 @Injectable()
 export class UserService {
+    private readonly logger = new Logger(UserService.name);
+
     constructor(
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
         @Inject(forwardRef(() => RoleService))
         private readonly roleService: RoleService,
+        @Inject(forwardRef(() => WebSocketService))
+        private readonly websocketService: WebSocketService,
     ) {}
 
     /**
@@ -101,6 +106,18 @@ export class UserService {
         // 排除 uuid 字段，不允许修改主键
         const { uuid, ...updateData } = updateUserDto;
         await this.userRepository.update(uuid, updateData);
+
+        // 如果修改了角色，推送新权限给该用户
+        if (updateUserDto.roleName !== undefined) {
+            const user = await this.userRepository.findOne({ where: { uuid } });
+            if (user) {
+                this.websocketService.pushPermissions(user.userCode).catch((err: Error) => {
+                    // 静默失败，不影响主流程
+                    this.logger.error(`推送权限给用户 ${user.userCode} 失败: ${err.message}`);
+                });
+            }
+        }
+
         return;
     }
 

@@ -10,6 +10,9 @@ export class RoleVo {
     @ApiProperty({ description: '角色描述', example: '系统管理员角色' })
     description: string;
 
+    @ApiProperty({ description: '数据范围', example: 'ALL' })
+    dataScope: string;
+
     @ApiProperty({ description: '创建时间', example: '2022-01-01T00:00:00.000Z' })
     createdAt: Date;
 

@@ -65,6 +65,7 @@ export class TimesheetService {
                 userCode: currentUserCode,
                 projectCode: projectCode,
                 workDate: workDate,
+                status: In([1, 2, 3]),
             },
         });
         if (existingTimesheet) {

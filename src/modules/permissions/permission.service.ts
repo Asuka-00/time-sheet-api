@@ -218,4 +218,26 @@ export class PermissionService {
             this.addParentCodes(parent.parentCode, allPermissions, permissionSet);
         }
     }
+
+    /**
+     * 获取用户按钮权限列表（根据用户权限代码过滤）
+     * @param permissionCodes 用户拥有的权限代码数组
+     * @returns 用户拥有的按钮权限代码数组
+     */
+    async getUserButtonPermissions(permissionCodes: string[]): Promise<string[]> {
+        // 1. 查询所有启用的按钮类型权限
+        const allButtonPermissions = await this.permissionRepository.find({
+            where: {
+                status: 1,
+                type: 'button',
+            },
+        });
+
+        // 2. 过滤出用户有权限的按钮权限代码
+        const userButtonPermissions = allButtonPermissions
+            .filter((p) => permissionCodes.includes(p.code))
+            .map((p) => p.code);
+
+        return userButtonPermissions;
+    }
 }

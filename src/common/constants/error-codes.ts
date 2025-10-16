@@ -155,6 +155,17 @@ export const ERROR_CODES = {
             NOT_FOUND: 'TIMESHEET.COMMON.NOT_FOUND',
         },
     },
+
+    // WebSocket模块
+    WEBSOCKET: {
+        AUTH: {
+            NO_TOKEN: 'WEBSOCKET.AUTH.NO_TOKEN',
+            INVALID_TOKEN: 'WEBSOCKET.AUTH.INVALID_TOKEN',
+        },
+        CONNECTION: {
+            FAILED: 'WEBSOCKET.CONNECTION.FAILED',
+        },
+    },
 } as const;
 
 // 导出类型以便TypeScript类型检查

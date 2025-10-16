@@ -16,6 +16,7 @@ import { MailModule } from './modules/mail/mail.module';
 import { ExcelModule } from './modules/excel/excel.module';
 import { ScheduleModule } from './modules/schedule/schedule.module';
 import { ReportConfigModule } from './modules/report-config/report-config.module';
+import { WebSocketModule } from './modules/websocket/websocket.module';
 import { RequestContextService } from './common/context/request-context.service';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RequestContextInterceptor } from './common/interceptors/request-context.interceptor';
@@ -46,6 +47,7 @@ import { getDatabaseConfig } from './config/database.config';
         ExcelModule,
         ScheduleModule,
         ReportConfigModule,
+        WebSocketModule,
     ],
     controllers: [AppController],
     providers: [

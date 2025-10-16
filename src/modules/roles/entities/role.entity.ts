@@ -15,6 +15,14 @@ export class Role {
     @Column()
     description: string;
 
+    @ApiProperty({
+        description: '数据范围',
+        required: false,
+        example: 'ALL',
+    })
+    @Column({ nullable: true })
+    dataScope: string;
+
     @Column({ nullable: true })
     createdBy: string;
 
