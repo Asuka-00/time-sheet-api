@@ -33,6 +33,7 @@ export class AuthService {
             userCode,
             userName,
             password,
+            roleName: '项目成员',
         });
 
         // 注册成功后自动登录

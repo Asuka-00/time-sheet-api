@@ -41,6 +41,8 @@ export class TasksService {
 
             if (!configs || configs.length === 0) {
                 this.logger.log('没有启用的报表配置');
+                // 清理所有已注册的报表定时任务
+                this.clearAllReportTasks();
                 return;
             }
 
@@ -48,7 +50,6 @@ export class TasksService {
             for (const config of configs) {
                 try {
                     const jobName = `report-task-${config.uuid}`;
-
                     // 如果任务已存在，先删除
                     try {
                         const existingJob = this.schedulerRegistry.getCronJob(jobName);
@@ -85,6 +86,40 @@ export class TasksService {
             this.logger.log(`成功加载 ${configs.length} 个报表定时任务`);
         } catch (error) {
             this.logger.error('加载报表定时任务失败', error.stack);
+        }
+    }
+
+    /**
+     * 清理所有已注册的报表定时任务
+     */
+    private clearAllReportTasks(): void {
+        try {
+            // 获取所有已注册的 CronJob
+            const jobs = this.schedulerRegistry.getCronJobs();
+
+            let clearedCount = 0;
+
+            // 遍历并删除所有以 'report-task-' 开头的任务
+            jobs.forEach((job, jobName) => {
+                if (jobName.startsWith('report-task-')) {
+                    try {
+                        job.stop();
+                        this.schedulerRegistry.deleteCronJob(jobName);
+                        clearedCount++;
+                        this.logger.log(`已清理报表任务: ${jobName}`);
+                    } catch (error) {
+                        this.logger.error(`清理报表任务失败: ${jobName}`, error.stack);
+                    }
+                }
+            });
+
+            if (clearedCount > 0) {
+                this.logger.log(`共清理 ${clearedCount} 个报表定时任务`);
+            } else {
+                this.logger.log('没有需要清理的报表任务');
+            }
+        } catch (error) {
+            this.logger.error('清理报表任务时发生错误', error.stack);
         }
     }
 
