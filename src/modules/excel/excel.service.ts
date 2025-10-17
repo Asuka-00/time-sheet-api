@@ -6,6 +6,7 @@ import { ProjectService } from '../projects/project.service';
 import { TimesheetService } from '../timesheets/timesheet.service';
 import { UserService } from '../users/user.service';
 import { EXCEL_CELL, offsetCell } from './constants/excel-cell';
+import { ProjectVo } from '../projects/dto/project.vo';
 
 @Injectable()
 export default class ExcelService {
@@ -57,8 +58,23 @@ export default class ExcelService {
         const lastMonthStartDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const lastMonthEndDate = new Date(now.getFullYear(), now.getMonth(), 0);
 
-        // 获取所有项目信息
-        const projects = await this.projectService.getProject();
+        // 获取项目信息（根据配置过滤）
+        let projects: ProjectVo[];
+        if (projectCodes && projectCodes.trim()) {
+            // 解析逗号分隔的项目编号
+            const projectCodeArray = projectCodes
+                .split(',')
+                .map((code) => code.trim())
+                .filter((code) => code);
+
+            if (projectCodeArray.length > 0) {
+                projects = await this.projectService.getProjectsByProjectCodes(projectCodeArray);
+            } else {
+                projects = await this.projectService.getProject();
+            }
+        } else {
+            projects = await this.projectService.getProject();
+        }
         // 获取所有对应工时记录
         const timeRecords = await this.timesheetService.getTimesheetsByDateRange(
             projectCodes || '',
@@ -112,6 +128,9 @@ export default class ExcelService {
                             this.copyCellStyle(cell, newCell);
                         });
                     }
+
+                    // 统一设置当前项目行行高为35
+                    worksheet1.getRow(currentRow).height = 35;
 
                     // 填写序号和项目名称
                     const rowOffset = currentRow - 4;
@@ -220,6 +239,16 @@ export default class ExcelService {
                     index,
                     0,
                 );
+
+                // 复制模板列样式（从第一个项目列）
+                if (index > 0) {
+                    const templateCell = worksheet2.getCell(
+                        EXCEL_CELL.RD.PROJECT_TIME_RECORD.USER_FIRST_PROJECT_NAME,
+                    );
+                    const currentCell = worksheet2.getCell(projectNameCell);
+                    this.copyCellStyle(templateCell, currentCell);
+                }
+
                 worksheet2.getCell(projectNameCell).value = project.projectName;
             });
 
@@ -308,7 +337,22 @@ export default class ExcelService {
                         0,
                     );
                     const projectColumn = projectCell.replace(/\d+/g, '');
-                    worksheet2.getCell(`${projectColumn}${currentRow}`).value = projectHours;
+                    const cellAddress = `${projectColumn}${currentRow}`;
+
+                    // 复制模板列样式（从第一个项目列）
+                    if (pIndex > 0) {
+                        const templateColumn =
+                            EXCEL_CELL.RD.PROJECT_TIME_RECORD.USER_FIRST_PROJECT_TOTAL.replace(
+                                /\d+/g,
+                                '',
+                            );
+                        const templateCellAddress = `${templateColumn}${currentRow}`;
+                        const templateCell = worksheet2.getCell(templateCellAddress);
+                        const currentCell = worksheet2.getCell(cellAddress);
+                        this.copyCellStyle(templateCell, currentCell);
+                    }
+
+                    worksheet2.getCell(cellAddress).value = projectHours;
 
                     // 累加项目总工时
                     projectTotals[project.projectCode] =
@@ -342,8 +386,22 @@ export default class ExcelService {
                     0,
                 );
                 const projectColumn = projectCell.replace(/\d+/g, '');
-                worksheet2.getCell(`${projectColumn}${totalRowIndex2}`).value =
-                    projectTotals[project.projectCode] || 0;
+                const cellAddress = `${projectColumn}${totalRowIndex2}`;
+
+                // 复制模板列样式（从第一个项目列）
+                if (pIndex > 0) {
+                    const templateColumn =
+                        EXCEL_CELL.RD.PROJECT_TIME_RECORD.USER_FIRST_PROJECT_TOTAL.replace(
+                            /\d+/g,
+                            '',
+                        );
+                    const templateCellAddress = `${templateColumn}${totalRowIndex2}`;
+                    const templateCell = worksheet2.getCell(templateCellAddress);
+                    const currentCell = worksheet2.getCell(cellAddress);
+                    this.copyCellStyle(templateCell, currentCell);
+                }
+
+                worksheet2.getCell(cellAddress).value = projectTotals[project.projectCode] || 0;
             });
 
             // 填写审核信息

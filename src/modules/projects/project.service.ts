@@ -213,6 +213,53 @@ export class ProjectService {
     }
 
     /**
+     * 根据项目编号列表查询项目
+     * @param projectCodes 项目编号列表
+     * @returns 项目信息列表
+     */
+    async getProjectsByProjectCodes(projectCodes: string[]): Promise<ProjectVo[]> {
+        if (!projectCodes || projectCodes.length === 0) {
+            return [];
+        }
+
+        // 查询项目详情
+        const projects = await this.projectRepository
+            .createQueryBuilder('project')
+            .where('project.projectCode IN (:...projectCodes)', { projectCodes })
+            .orderBy('project.createdAt', 'DESC')
+            .getMany();
+
+        if (!projects || projects.length === 0) {
+            return [];
+        }
+
+        // 填充额外信息
+        const projectVos: ProjectVo[] = await Promise.all(
+            projects.map(async (project) => {
+                const vo = { ...project } as ProjectVo;
+
+                // 获取项目经理姓名
+                const manager = await this.userService.findByUserCode(project.managerUserCode);
+                vo.managerUserName = manager?.userName;
+
+                // 获取项目总监姓名
+                const director = await this.userService.findByUserCode(project.directorUserCode);
+                vo.directorUserName = director?.userName;
+
+                // 获取成员数量
+                const memberCount = await this.projectMemberRepository.count({
+                    where: { projectCode: project.projectCode },
+                });
+                vo.memberCount = memberCount;
+
+                return vo;
+            }),
+        );
+
+        return projectVos;
+    }
+
+    /**
      * 更新项目
      * @param projectDto 项目信息
      */
